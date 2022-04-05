@@ -1,22 +1,23 @@
 # PoSo code
-This project implements the PoSo scheme on the integerated energy system (IES) in the University of Manchester. User can refer to https://github.com/kelpman05/DataUofManchester for the paramteters and dispatching results of IES. The settings of four scenarios are shown in paper "A blockchain consensus mechanism that uses Proof of Solution to optimize energy dispatch and trading". 
+This repository includes the PoSo code and shows how PoSo can be used to enable energy dispatch for an integrated energy system (IES) at the University of Manchester. The parameters and dispatch results of the IES are available at https://github.com/kelpman05/DataUofManchester. Explanation of the code is available at our article:
+Chen, S., Mi, H., Ping, J., Yan, Z., Shen, Z., Liu, X., Zhang, N., Xia, Q., Kang, C., (2022), A blockchain consensus mechanism that uses Proof of Solution to optimize energy dispatch and trading, Nature Energy, accepted in principle.
+Please cite this article (refered to as PoSo article in the following text) if you want to cite the PoSo code.
 
 # Environment Configuration
-- The project could only run in Windows OS.
-- The project use GAMS to solve the optimization model. User should install GAMS and ensure that the solver "CONOPT4" is avaliable.
-- The communication program is implemented by Python. Therfore, GAMS Python API should be configured. User can refer to https://www.gams.com/32/docs/API_PY_TUTORIAL.html for the API configureration.
-- Before running the project, the user should replace `C:\Users\miller\Desktop\PoO\POO_scenario` with own local path in `POO_scenario\config.scenepoo.12xdual .bat` file.
+- The code must be run in Windows OS.
+- The code uses GAMS to solve the optimization problem. Please install GAMS and solver "CONOPT4".
+- The code for delegates to communicate messages is written in Python. Therefore, GAMS Python API should be configured. Please read https://www.gams.com/32/docs/API_PY_TUTORIAL.html for API configuration.
+- Before running the code, please replace `C:\Users\miller\Desktop\PoO\POO_scenario` with your own local path in POO_scenario\config.scenepoo.12xdual .bat.
 
-# Files explanation
-- The optimization program and KKT verification program is in `POO_scenario\distributed_consensus\scene\poo_solve.py`. 
-- The configurations of delegates' dishonest behavior in four scenarios are in `POO_scenario\config.scenepoo.12xdual.yaml`. 
+# File explanation
+- The code about the optimization model and the associated optimality conditions are given in `POO_scenario\distributed_consensus\scene\poo_solve.py`. 
+- The delegates' dishonest behaviors can be configured in `POO_scenario\config.scenepoo.12xdual.yaml`. 
 - The start-up file is `POO_scenario\config.scenepoo.12xdual .bat`.
 
 # Experiment 
-The configuration of four scenarios are in `POO_scenario\config.scenepoo.12xdual.yaml`. 
-Nodes 8-12 correspond to delegates C-G. Nodes 8-12 will act as leader in sequence.  The "leader_evil" option represents whether the delegate is dishonest. For the leader, "folower_ignore" option defines the nodes that the leader will not send message. "follower_error" option defines the nodes that the leader will send non-optimal message. For delegates, "follower_trick_ignore" option defines the nodes that the delegate will not send message. The "follower_trick_error" option defines the nodes that the delgegate will send non-optimal message. Take scenario 1 for example. Leader C sends the non-optimal message only to delegate F but not others. Delegate F does not send any message to other followers. The "leader_evil" options of node 8 and node 11 are actived. The "follower_ignore" option of node 8 is configured as [9,10,12]. The "follower_error" option of node 8 is [8,11]. The follower_trick_error of node 11 is set as [9,10,12]. Finally, run `config.scenepoo.12xdual.bat` and five windows that represent nodes 8-12 will be opened. The communication records of five delegates are shown in the widows. 
-
-The communication message among delegates are stored in path `POO_scenario\tests\ptry\delegate` as "Optimization_data" and "dual_data". The name of the files represents the communication path of the message. Take file `Optimization_data_Node12_9via10_5facba2b8cfd27ec67edb895785da837` for example. "Optimization_data" represents that this file records the optimization message. "Node12" represents that the message is received by Node 12. "9via10" represents that this message is the one that node 9 forwards to node 10. Therefore, the message corresponds to the <$744>DE in paper "A blockchain consensus mechanism that uses Proof of Solution to optimize energy dispatch and trading", Table 3, Scenario I, Phase for delegates (Leader is D), row G, column R2.
+The PoSo article demonstrates four scenarios when running the PoSo code (see Table 3 in the PoSo article). In `POO_scenario\config.scenepoo.12xdual.yaml`, nodes 8-12 refer to delegates C-G, who act as leaders in turns. The variable "leader_evil" defines whether a delegate is dishonest. A leader sends non-optimal messages to those followers defined as "follower_error", and does not send any message to those followers defined as "follower_ignore". A follower sends non-optimal messages to those delegates defined as "follower_trick_error", and does not send any message to those delegates defined as "follower_trick_ignore".
+For example, in Scenario I, Leader C sends a non-optimal message to Follower F and does not send any message to others. Follower F does not send any message to others. Hence, the variables "leader_evil" of node 8 and node 11 are set as positive. The variable "follower_ignore" of node 8 is set as [9, 10, 12]. The variable "follower_error" of node 8 is set as [8, 11]. The variable "follower_trick_error" of node 11 is set as [9, 10, 12]. By running `config.scenepoo.12xdual.bat`, five windows respectively output the communication records of the five delegates.
+The communication records among the five delegates are also stored in path `POO_scenario\tests\ptry\delegate` as "Optimization_data" and "dual_data". The names of the files represent the communication paths of messages. Take file `Optimization_data_Node12_9via10_5facba2b8cfd27ec67edb895785da837` for an example. "Optimization_data" means that this file records an optimal solution. "Node12" means that the message is stored by node 12. "9via10" means that node 9 sends the message to node 12 via node 10. Therefore, this file records "<$744>DE", in Row G, Column R2, Phase for delegates (Leader is D), Scenario I, table 3.
 
 # Credits
-This package was created with [Cookiecutter](https://github.com/cookiecutter/cookiecutter) and the [audreyr/cookiecutter-pypackage](https://github.com/audreyfeldroy/cookiecutter-pypackage) project template.
+This project is based on [Cookiecutter](https://github.com/cookiecutter/cookiecutter) and the [audreyr/cookiecutter-pypackage](https://github.com/audreyfeldroy/cookiecutter-pypackage) project template.
