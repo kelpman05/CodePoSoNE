@@ -1,0 +1,100 @@
+# YAML语法参考：
+#  https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+
+# 运行程序时日志打印级别
+log_level: debug
+
+# 所有节点配置在此对象中。对象每个key是一个Node的ID，为32位无符号整数范围内的整数。
+# 值含义见各项注释。
+# 在微网内所有节点上，本项配置应该保持一致，否则可能导致未知问题。
+nodes:
+    
+    8:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11118
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB8.xlsx"
+        leader_evil:
+            # 作恶1 配置follower_error
+            # 作恶2 配置follower_ignore
+            # 作恶3 配置follower_feasible
+            # 作恶4 配置follower_error 和 follower_collusion
+            # 不发送给从节点
+            follower_ignore: [9,10,12]
+            # 给从节点发送错误姐
+            follower_error: [8,11]
+            # 给从节点发送不是最优解的可行解
+            #follower_feasible: []
+            # 从代表串谋者，会直接发送代表发送过来的结果，而不会比较最优解
+            #follower_collusion: []
+
+    9:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11119
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB9.xlsx"
+        #leader_evil:
+            # 从代表串谋者，会直接发送代表发送过来的结果，而不会比较最优解
+            #follower_trick_ignore: [10,11,12]
+            
+    10:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11120
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB10.xlsx"
+        #leader_evil:
+            # 从代表串谋者，会直接发送代表发送过来的结果，而不会比较最优解
+            #follower_trick_error: [9]
+            #follower_trick_ignore: [11,12]
+    11:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11121
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB11.xlsx"
+        leader_evil:
+            follower_trick_error: [9,10,12]
+    12:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11122
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB12.xlsx"  
+
+# 场景配置，微网内各节点该项配置应相同。
+scene:
+    # 微网建立后需要运行的场景类路径，路径使用Python导入规范命名
+    class: distributed_consensus.scene.scene_type_poo.MultiEnergyPoo
+    # 创建场景类实例时需要传入的参数。程序使用keyword方式传参，因此参数顺序并不重要。
+    params:
+        final_round: 2000
+        round_timeout_sec: 50.0
+        normal_round_timeout_sec: 3000.0
+        round_end_cache: "./tests/cache/round_end.txt"
+        init_end_cache: "./tests/cache/init_end.txt"
+        ptry: "./tests/ptry"  
+
+# 传输层参数
+# key为需要配置的传输层（目前只支持tcpv1），值为该层的控制参数
+transport:
+    tcpv1:
+        # 微网建立超时时间。假设在改时间过期前，微网中所有节点均能建立连接
+        micronet_init_sec: 10.0

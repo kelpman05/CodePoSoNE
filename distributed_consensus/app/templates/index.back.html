@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>节点{{ local.id }}</title>
+    <link rel="stylesheet" href="../static/css/multiple-select.min.css">
+    <link rel="stylesheet" href="../static/css/index.css">
+    <script src="../static/js/jquery-3.5.1.min.js"></script>
+    <script src="../static/js/echarts.min.js"></script>
+    <script src="../static/js/multiple-select.min.js"></script>
+    <script src="../static/js/socket.io.min.js" charset="utf-8"></script>
+    <script src="../static/js/index.js" charset="utf-8"></script>
+</head>
+<body>
+  <div class="content">
+    <div class="content-body">
+      <div class="row content-row">
+
+        <div class="col data">
+          <div class="row panel">
+            <div class="col ">
+              <div class="card">
+                <div class="card-content">
+                  <div class="row node">
+                    <div class="node-content">
+                      <div class="title">
+                        <div class="name">节点{{ local.id }}</div>
+                      </div>
+                      <div class="summary">
+                        <div class="summary-item">周期：第<p id="round">0</p>轮</div>
+                        <div class="summary-item">身份：{{ '代表' if local.is_delegate else '微网' }}</div>
+                        <div class="summary-item">黑名单：<p id="blacklist">空</p></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row console">
+                    <div class="col console-body" id="console">
+                      <p>test console log 超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本</p>
+                      <p>test console log</p>
+                      <p>test console log</p>
+                      <p>test console log</p>
+                      <p>test console log</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col ">
+              <div class="card">
+                <div class="card-content">
+                  <div class="row interaction">
+                    <div class="interaction-content">
+                      <div class="title">
+                        <div class="name">交互</div>
+                      </div>
+                      <div class="summary">
+                        <button class="btn btn-info">启动</button>
+                        <button class="btn btn-danger" disabled="disabled">暂停</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row config">
+                    <div class="tab" id="config-tab">
+                      <div class="tab-head">
+                        <div class="active-bar-top"></div>
+                        <div class="active-bar-bottom"></div>
+                        <div class="tab-bt active" target="micro">微网作恶</div>
+                        {% if local.is_delegate %}
+                          <div class="tab-bt" target="leader">代表作恶</div>
+                        {% endif %}
+                      </div>
+                      <div class="tab-content">
+                        <div name="micro" hidden>
+                          <form class="form" id="normal_evil" action="/evil/normal">
+                            <div class="form-item">
+                              <label>忽略代表</label>
+                              <div class="form-input">
+                                <select id='normal_ignore' name="normal_ignore" class="ms-item" style="width:120px;height:28px;" multiple="multiple" placeholder="忽略代表" disabled="disabled">
+                                  {% for node in nodes %}
+                                    {% if node.is_delegate and node.id != local.id %}
+                                    <option value="{{ node.id }}">节点{{ node.id }}</option>
+                                    {% endif %}
+                                  {% endfor %}                                                                                                                                                       
+                                </select>   
+                              </div>   
+                            </div>
+                            <div class="form-item">
+                              <label>作恶目标</label>
+                              <div class="form-input">
+                                <select id='normal_target' name="normal_target" class="ms-item" style="width:120px;height:28px;" multiple="multiple" placeholder="作恶目标" disabled="disabled">
+                                  {% for node in nodes %}
+                                    {% if node.is_delegate and node.id != local.id %}
+                                    <option value="{{ node.id }}">节点{{ node.id }}</option>
+                                    {% endif %}
+                                  {% endfor %}                                                                                                                                                       
+                                </select> 
+                              </div> 
+                            </div>
+                            <div class="form-item">
+                              <label>作恶系数</label>
+                              <div class="form-input"><input id="normal_rate" type="text" name="normal_rate" class="input-item" placeholder="作恶系数" disabled="disabled"/></div> 
+                            </div>
+                            <div class="form-item">
+                              <button type="button" class="btn btn-info bt-edit" >编辑</button>
+                              <button type="button" class="btn btn-success bt-editing bt-sure" hidden style="display: none;">确认</button>
+                              <button type="button" class="btn btn-info bt-editing bt-cancel" style="display: none;">取消</button>
+                            </div>
+                          </form>
+                        </div>
+                        <div name="leader" hidden>
+                          <form class="form" id="delegate_evil" action="/evil/delegate">
+                            <div class="form-item">
+                              <label>忽略微网</label>
+                              <div class="form-input">
+                                <select id='delegate_ignore' name="delegate_ignore" class="ms-item" style="width:120px;height:28px;" multiple="multiple"  placeholder="忽略微网" disabled="disabled">
+                                  {% for node in nodes %}
+                                    {% if node.is_normal and node.id != local.id %}
+                                    <option value="{{ node.id }}">节点{{ node.id }}</option>
+                                    {% endif %}
+                                  {% endfor %}                                                                                                                                                       
+                                </select> 
+                              </div>   
+                            </div>
+                            <div class="form-item">
+                              <label>串谋微网</label>
+                              <div class="form-input">
+                                <select id='delegate_collusion' name="delegate_collusion" class="ms-item" style="width:120px;height:28px;" multiple="multiple"  placeholder="串谋微网" disabled="disabled">
+                                  {% for node in nodes %}
+                                    {% if node.is_normal and node.id != local.id  %}
+                                    <option value="{{ node.id }}">节点{{ node.id }}</option>
+                                    {% endif %}
+                                  {% endfor %}                                                                                                                                                       
+                                </select> 
+                              </div> 
+                            </div>
+                            <div class="form-item">
+                              <label>作恶目标</label>
+                              <div class="form-input">
+                                <select id='delegate_target' name="delegate_target" class="ms-item" style="width:120px;height:28px;" multiple="multiple"  placeholder="作恶目标" disabled="disabled">
+                                  {% for node in nodes %}
+                                    {% if node.is_delegate and node.id != local.id  %}
+                                    <option value="{{ node.id }}">节点{{ node.id }}</option>
+                                    {% endif %}
+                                  {% endfor %}                                                                                                                                                       
+                                </select> 
+                              </div> 
+                            </div>
+                            <div class="form-item">
+                              <label>作恶系数</label>
+                              <div class="form-input"><input id='delegate_rate' type="text" name="delegate_rate" class="input-item" placeholder="作恶系数" disabled="disabled"/></div> 
+                            </div>
+                            <div class="form-item">
+                              <button type="button" class="btn btn-info bt-edit" >编辑</button>
+                              <button type="button" class="btn btn-success bt-editing bt-sure" hidden style="display: none;">确认</button>
+                              <button type="button" class="btn btn-info bt-editing bt-cancel" style="display: none;">取消</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col dp">
+          <div class="card">
+            <div class="card-content">
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

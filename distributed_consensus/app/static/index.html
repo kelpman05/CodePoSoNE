@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>节点</title>
+    <link rel="stylesheet" href="../static/css/multiple-select.min.css">
+    <link rel="stylesheet" href="../static/css/index.css">
+    <script src="../static/js/jquery-3.5.1.min.js"></script>
+    <script src="../static/js/echarts.min.js"></script>
+    <script src="../static/js/multiple-select.min.js"></script>
+    <script src="../static/js/index.js"></script>
+</head>
+<body>
+  <div class="content">
+    <div class="content-body">
+      <div class="row content-row">  
+        <div class="col data">
+          <div class="row panel">
+            <div class="col ">
+              <div class="card">
+                <div class="card-content">
+                  <div class="row node">
+                    <div class="node-content">
+                      <div class="title">
+                        <div class="name">Community 12</div>
+                      </div>
+                      <div class="summary">
+                        <div class="summary-item">Iteration：1</div>
+                        <div class="summary-item">Identity：Delegate/ Community</div>
+                        <div class="summary-item">Blacklist：Community1，Community2，Community3</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row console">
+                    <div class="col console-body" id="console">
+                      <p>test console log 超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本超长文本</p>
+                      <p>test console log</p>
+                      <p>test console log</p>
+                      <p>test console log</p>
+                      <p>test console log</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="col evil">
+          <div class="row panel">
+            <div class="col ">
+              <div class="card">
+                <div class="card-content">
+                  <div class="row interaction">
+                    <div class="interaction-content">
+                      <div class="title">
+                        <div class="name">Control panel</div>
+                      </div>
+                      <div class="summary">
+                        <button class="btn btn-info" id="bt_start">Start</button>
+                        <button class="btn btn-danger" disabled="disabled" id="bt_pause">Pause</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row config">
+                    <div class="tab" id="config-tab">
+                      <div class="tab-head">
+                        <div class="active-bar-top"></div>
+                        <div class="active-bar-bottom"></div>
+                        <div class="tab-bt active" target="micro">Community options</div>
+                        <div class="tab-bt" target="leader">Delegate options</div>
+                      </div>
+                      <div class="tab-content">
+                        <div name="micro" hidden>
+                          <form class="form" id="normal_evil">
+                            <fieldset>
+                              <legend>send nothing to delegates</legend>
+                              <div class="form-item">
+                                <label>target</label>
+                                <div class="form-input">
+                                  <select id='normal_ignore' class="ms-item" style="width:120px;height:28px;" multiple="multiple" placeholder="target"  disabled="disabled">
+                                  　　　　<option value="1">选项1</option>
+                                  　　　　<option value="2">选项2</option>
+                                  　　　　<option value="3">选项3</option>
+                                  　　　　<option value="4">选项4</option>
+                                  　　　　<option value="5">选项5</option>
+                                  　　　　<option value="6">选项6</option>
+                                  　　　　<option value="7">选项7</option>                                                                                                                                                           
+                                  </select>   
+                                </div>   
+                              </div>
+                            </fieldset>
+                            <fieldset>
+                              <legend>send manipulated bids to delegates</legend>
+                              <div class="form-item">
+                                <label>target</label>
+                                <div class="form-input"><input id='normal_dif' class="input-item" placeholder="target"  disabled="disabled"/></div> 
+                              </div>
+                              <div class="form-item">
+                                <label>manipulation multiplier</label>
+                                <div class="form-input"><input id="normal_rate"  class="input-item" placeholder="manipulation multiplier"  disabled="disabled"/></div> 
+                              </div>
+                            </fieldset>
+
+                            <div class="form-item">
+                              <button type="button" class="btn btn-info bt-edit" >Edit</button>
+                              <button type="button" class="btn btn-success bt-editing bt-sure" hidden style="display: none;">Sure</button>
+                              <button type="button" class="btn btn-info bt-editing bt-cancel" style="display: none;">Cancel</button>
+                            </div>
+                          </form>
+                        </div>
+                        <div name="leader" hidden>
+                          <form class="form" id="delegate_evil">
+                            <fieldset>
+                              <legend>send nothing to communities</legend>
+                              <div class="form-item">
+                                <label>target</label>
+                                <div class="form-input"><input id='delegate_ignore' class="input-item" placeholder="target" disabled="disabled"/></div>   
+                              </div>
+                            </fieldset>
+                            <fieldset>
+                              <legend>send manipulated prices to communities</legend>
+                              <div class="form-item">
+                                <label>target</label>
+                                <div class="form-input"><input id='delegate_ignore' class="input-item" placeholder="target" disabled="disabled"/></div>   
+                              </div>
+                              <div class="form-item">
+                                <label>manipulation multiplier</label>
+                                <div class="form-input"><input id='delegate_ignore' class="input-item" placeholder="manipulation multiplier" disabled="disabled"/></div>   
+                              </div>
+                            </fieldset>
+                            <fieldset>
+                              <legend>send nothing to delegates</legend>
+                              <div class="form-item">
+                                <label>target</label>
+                                <div class="form-input"><input id='delegate_ignore' class="input-item" placeholder="target" disabled="disabled"/></div>   
+                              </div>
+                            </fieldset>
+                            <fieldset>
+                              <legend>send manipulated bids to delegates</legend>
+                              <div class="form-item">
+                                <label>colluding community</label>
+                                <div class="form-input"><input id='delegate_diff_from' class="input-item" placeholder="colluding community" disabled="disabled"/></div> 
+                              </div>
+                              <div class="form-item">
+                                <label>target</label>
+                                <div class="form-input"><input id='delegate_diff_to' class="input-item" placeholder="target" disabled="disabled"/></div> 
+                              </div>
+                              <div class="form-item">
+                                <label>manipulation multiplier</label>
+                                <div class="form-input"><input  id='delegate_rate'  class="input-item" placeholder="manipulation multiplier" disabled="disabled"/></div> 
+                              </div>
+                            </fieldset>
+                            
+                            <div class="form-item">
+                              <button type="button" class="btn btn-info bt-edit" >Edit</button>
+                              <button type="button" class="btn btn-success bt-editing bt-sure" style="display: none;">Sure</button>
+                              <button type="button" class="btn btn-info bt-editing bt-cancel" style="display: none;" >Cancel</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col dp">
+          <div class="card">
+            <div class="card-content">
+              <div class="row demand">
+                <div class="row_title">
+                  <div class="name">
+                    <p>Sell/purchase bids (MWh)</p>
+                  </div>
+                </div>
+                <div class="row_content">
+                  <div class="demand_table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Delegate</th>
+                          <th>Electricity</th>
+                          <th>Gas</th>
+                          <th>Heat 1</th>
+                        </tr>
+                      </thead>
+                      <tbody id="demand_body">
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="row price">
+                <div class="row_title">
+                  <div class="name">
+                    <p>Price (￥/MWh)</p>
+                  </div>
+                </div>
+                <div class="row_content">
+                  <div class="price_table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Delegate</th>
+                          <th>Electricity</th>
+                          <th>Gas</th>
+                          <th>Heat 1</th>
+                        </tr>
+                      </thead>
+                      <tbody id="price_body">
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="row from_delegate">
+                <div class="row_title">
+                  <div class="name">
+                    <p>Price received from delegates (￥/MWh)</p>
+                  </div>
+                </div>
+                <div class="row_content">
+                  <div class="delegate_table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Delegate</th>
+                          <th>Electricity</th>
+                          <th>Gas</th>
+                          <th>Heat 1</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="row from_normal">
+                <div class="row_title">
+                  <div class="name">
+                    <p>Sell/purchase bids received from communities (MWh)</p>
+                  </div>
+                </div>
+                <div class="row_content">
+                  <div class="normal_table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Community</th>
+                          <th>Electricity</th>
+                          <th>Gas</th>
+                          <th>Heat</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                        <tr><td>Delegate</td><td>Electricity</td><td>Gas</td><td>Heat 1</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+               
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

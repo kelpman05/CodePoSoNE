@@ -1,0 +1,130 @@
+# YAML语法参考：
+#  https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+
+# 运行程序时日志打印级别
+log_level: debug
+
+# 所有节点配置在此对象中。对象每个key是一个Node的ID，为32位无符号整数范围内的整数。
+# 值含义见各项注释。
+# 在微网内所有节点上，本项配置应该保持一致，否则可能导致未知问题。
+nodes:
+    1:
+        # 传输层协议，目前只支持tcpv1
+        transport: tcpv1
+        # 节点IP地址和端口号，IP地址为字符串，端口号为整数
+        ip: 127.0.0.1
+        port: 11111
+        # 节点公私钥文件路径。如果是相对路径，则读取时相对配置文件所在路径搜索。
+        # 除本节点（local node）外，其他节点只需要公钥即可（理论上也拿不到其他节点的私钥）。
+        # 但为了实验方便，所有节点都可以配置私钥路径，读取时除了本节点，程序不会尝试读取或
+        # 验证其他节点的私钥，即便私钥文件不存在也可执行。
+        private_key_file: "./tests/test_keys/node1.key"
+        public_key_file: "./tests/test_keys/node1.pub"
+        # 节点是否为代表
+        is_delegate: no
+        # 节点是否为普通节点
+        is_normal: yes
+        normal_evil: 
+            # 发送需求时忽略代表
+            demand_ignore: []
+            # 发送需求时作恶的目标代表
+            demand_target: []
+            # 发送需求时作恶的倍率
+            demand_rate: 0.1
+
+        
+        hub: "./tests/data/HUB1.xlsx"
+    2:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11112
+        private_key_file: "./tests/test_keys/node2.key"
+        public_key_file: "./tests/test_keys/node2.pub"
+        is_delegate: no
+        is_normal: yes
+        hub: "./tests/data/HUB2.xlsx"
+    #3:
+        #transport: tcpv1
+        #ip: 127.0.0.1
+        #port: 11113
+        #private_key_file: "./tests/test_keys/node3.key"
+        #public_key_file: "./tests/test_keys/node3.pub"
+        #is_delegate: yes
+        #is_normal: yes
+        #hub: "./tests/data/HUB3.xlsx"
+    3:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11113
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB3.xlsx"
+    4:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11114
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB4.xlsx"
+        delegate_evil: 
+            # 不发数据给某几个微网
+            #ignore: [4]
+            # 不发数据给所有微网
+            # ignore_all: false
+            # 转发修改
+            # collusion_nodes: [2]
+            # target_nodes: [5]
+            # rate: 0.1
+
+            # 价格发送时忽略的微网
+            price_ignore: []
+            # 价格发送时作恶的目标微网
+            price_target: []
+            # 发送不同价格时作恶的倍率
+            price_rate: 0.1
+            # 转发时忽略的代表
+            broadcast_ignore: []
+            # 转发时与代表串谋的微网
+            broadcast_collusion: []
+            # 转发时作恶的目标代表
+            broadcast_target: []
+            # 转发时作恶的数据倍率
+            broadcast_rate: 0.1
+
+
+    5:
+        transport: tcpv1
+        ip: 127.0.0.1
+        port: 11115
+        private_key_file: "./tests/test_keys/node3.key"
+        public_key_file: "./tests/test_keys/node3.pub"
+        is_delegate: yes
+        is_normal: yes
+        hub: "./tests/data/HUB5.xlsx"
+
+# 场景配置，微网内各节点该项配置应相同。
+scene:
+    # 微网建立后需要运行的场景类路径，路径使用Python导入规范命名
+    class: distributed_consensus.scene.scene_type_III.MultiEnergyPark
+    # 创建场景类实例时需要传入的参数。程序使用keyword方式传参，因此参数顺序并不重要。
+    params:
+        final_round: 1000
+        round_timeout_sec: 10
+        first_demand: "./tests/data/first_demand.xlsx"
+        demand: "./tests/data/demand.xlsx"
+        price_ge: "./tests/data/price_ge.xlsx"
+        initial: "./tests/data/initialValue.xlsx"
+        
+
+
+
+# 传输层参数
+# key为需要配置的传输层（目前只支持tcpv1），值为该层的控制参数
+transport:
+    tcpv1:
+        # 微网建立超时时间。假设在改时间过期前，微网中所有节点均能建立连接
+        micronet_init_sec: 10.0
