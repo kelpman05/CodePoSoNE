@@ -87,11 +87,11 @@ class TCPConnectionHandler:
             self.logger.warn(f'remote is None')
             ok = False
         elif remote.is_blacked:
-            self.logger.warn(f'remote {remote.id} is blocked, disconnect')
+            self.logger.warn(f'remote {remote.name} is blocked, disconnect')
             ok = False
         elif self.local_node.pure_normal and remote.pure_normal:
             self.logger.warn(
-                f'both local and {remote.id} are pure normal node, disconnect'
+                f'both local and {remote.name} are pure normal node, disconnect'
             )
             ok = False
         return ok
@@ -115,8 +115,8 @@ class TCPConnectionHandler:
         )
         self.logger.info(
             'add connection from %s to %s (%s)',
-            self.local_node.id,
-            remote.id if remote is not None else 'unknown',
+            self.local_node.name,
+            remote.name if remote is not None else 'unknown',
             writer.get_extra_info('peername'),
         )
         # add_connection 作为server回调的时候，remote是None的
@@ -159,20 +159,20 @@ class TCPConnectionHandler:
             await self.data_loop(ingress, egress, reader, writer, protocol)
         except asyncio.CancelledError:
             self.logger.info(
-                f'{remote.id} data loop exited due to initiative close'
+                f'{remote.name} data loop exited due to initiative close'
             )
         except asyncio.IncompleteReadError:
             self.logger.warn(
-                f'{remote.id} data loop exited due to disconnection'
+                f'{remote.name} data loop exited due to disconnection'
             )
             if remote.is_delegate and remote > self.local_node:
                 self.logger.info(
-                    f'{remote.id} delegate disconnection, try reconnecting'
+                    f'{remote.name} delegate disconnection, try reconnecting'
                 )
                 self.connect_in_background(remote)
             else:
                 self.logger.info(
-                    f'{remote.id} disconnection, expect incoming reconnection'
+                    f'{remote.name} disconnection, expect incoming reconnection'
                 )
         except:  # noqa
             self.logger.warn('data loop exited with exception', exc_info=True)
@@ -198,7 +198,7 @@ class TCPConnectionHandler:
         def in_task():
             return asyncio.create_task(
                 reader.readexactly(protocol.num_to_read()),
-                name=f'recv-{protocol.remote.id}',
+                name=f'recv-{protocol.remote.name}',
             )
 
         def retrieve_exception_cb(task: asyncio.Task):
@@ -275,7 +275,7 @@ class TCPConnectionHandler:
                 break
             except:  # noqa
                 self.logger.warn(
-                    f'connect to node {node.id} {node.ip}:{node.port} failed',
+                    f'connect to node {node.name} {node.ip}:{node.port} failed',
                     exc_info=True,
                 )
             if retry is not None:
@@ -283,7 +283,7 @@ class TCPConnectionHandler:
                     retry -= 1
                 else:
                     self.logger.error(
-                        f'fail to connect {node.id} {node.ip}:{node.port}'
+                        f'fail to connect {node.name} {node.ip}:{node.port}'
                     )
                     return
             if wait < 30:
@@ -291,7 +291,7 @@ class TCPConnectionHandler:
             else:
                 wait = 30 + random.random()
             self.logger.info(
-                f'retry connecting node {node.id} in {wait:.3f} seconds'
+                f'retry connecting node {node.name} in {wait:.3f} seconds'
             )
             await asyncio.sleep(wait)
 
@@ -342,7 +342,7 @@ class TCPConnectionHandler:
         # 连接其他代表
         for node in sorted(all_nodes):
             if node is self.local_node:
-                self.logger.debug(f'node {node.id} is local, continue')
+                self.logger.debug(f'node {node.name} is local, continue')
                 # meet local node in sorted node list, should connect to
                 # following nodes
                 # self.connect_in_background(node)
@@ -350,14 +350,14 @@ class TCPConnectionHandler:
                 should_connect = True
             elif self.local_node.pure_normal and node.pure_normal:
                 self.logger.debug(
-                    f'both local and {node.id} are pure normal node, continue'
+                    f'both local and {node.name} are pure normal node, continue'
                 )
             elif should_connect:
                 self.logger.debug(f'connect to node {node.id}')
                 self.connect_in_background(node)
                 self.pending_nodes.add(node)
             else:
-                self.logger.debug(f'expect node {node.id} to connect')
+                self.logger.debug(f'expect node {node.name} to connect')
                 self.pending_nodes.add(node)
         # wait_micronet_up(micronet_ok)等待微网启动(连接进来)并释放信号
         asyncio.create_task(self.wait_micronet_up(micronet_ok))
@@ -420,4 +420,4 @@ class TCPConnectionHandler:
         evil_node = self.node_manager.get_node(node_id)
         if evil_node is not None and isinstance(evil_node, Node):
             self.loop.call_soon_threadsafe(self.queue_manager.close, evil_node)
-        self.logger.warn(f'node {node_id} has been blocked')
+            self.logger.warn(f'node {evil_node.name} has been blocked')

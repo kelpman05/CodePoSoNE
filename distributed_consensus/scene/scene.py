@@ -279,12 +279,12 @@ class AbstractScene(ABC):
             return False
         if not pkt.received_from.is_delegate:
             self.logger.debug(
-                "remote %s is not delegate", pkt.received_from.id,
+                "remote %s is not delegate", pkt.received_from.name,
             )
             return False
         if not pkt.origin.is_delegate:
             self.logger.debug(
-                "origin %s is not delegate", pkt.origin.id,
+                "origin %s is not delegate", pkt.origin.name,
             )
             return False
         data_type = self.data_type(pkt)
@@ -299,7 +299,7 @@ class AbstractScene(ABC):
     def is_normal_packet(self, pkt: QueuedPacket) -> bool:
         if not pkt.origin.is_normal:
             self.logger.warning(
-                "origin %s is not normal", pkt.origin.id,
+                "origin %s is not normal", pkt.origin.name,
             )
             return False
         if self.data_type(pkt) != DataType.NormalToDelegate:
@@ -366,7 +366,7 @@ class AbstractPooScene(ABC):
     node_manager: NodeManager
     adapter: QueueManagerAdapter
     done_cb: typing.Callable
-    seen: typing.Set[typing.Tuple[int, bytes]]
+    seen: typing.Set[int]
     local_delegate_data: typing.Optional[bytes]
     logger: logging.Logger
     def __init__(
@@ -414,16 +414,19 @@ class AbstractPooScene(ABC):
     # seen 存储已经转发过的node，如果没有转发，则转发出去。（以此来避免数据在各个代表中循环转发）
     def delegate_forward(self, pkt: QueuedPacket, filter_: NodeFilter) -> bool:
         # seen?这个不用每轮清空吗?
-        if (pkt.origin.id, pkt.data) not in self.seen: 
-            self.seen.add((pkt.origin.id, pkt.data))
+        if pkt.origin.id not in self.seen: 
+            self.seen.add(pkt.origin.id)
             self.adapter.broadcast_forward(pkt, filter_=filter_)
             return True
         return False
+    # adapt是poo场景使用的方法，其他同名方法是其他场景方法
+    # 一些属性可能为了适配poo，会做修改，导致其他场景的方法不适用
     def delegate_forward_adpt(self,getter:ForwardGetter,pkt: QueuedPacket, filter_: NodeFilter)->bool:
+        value =self.data_value(pkt)
         if self.solve_data_validate(pkt.data,pkt.origin.id,pkt.received_from.id):
             # seen?这个不用每轮清空吗?
-            if (pkt.origin.id, pkt.data) not in self.seen:
-                self.seen.add((pkt.origin.id, pkt.data))
+            if pkt.origin.id not in self.seen:
+                self.seen.add(pkt.origin.id)
                 # 当数据是来源于local时，不需要转发
                 if pkt.origin.id != self.local.id:
                     # 这里判断解是否异常
@@ -432,9 +435,9 @@ class AbstractPooScene(ABC):
                     self.logger.info(f'data is from local,ignore forward')
                 return True
             else:
-                self.logger.info(f'has the same data from {pkt.origin.id}via{pkt.received_from.id},ignore forward')
+                self.logger.info(f'has the same data from {value.send_path}via{self.local.name},ignore forward')
         else:
-            self.logger.info(f'data from {pkt.origin.id}via{pkt.received_from.id} is unvalidate,ignore forward')
+            self.logger.info(f'data from {value.send_path}via{self.local.name} is unvalidate,ignore forward')
         return False
     def extract_majority(self, received: NodeDataMap):
         # local_delegate_data 为本地代表发送的数据
@@ -458,12 +461,12 @@ class AbstractPooScene(ABC):
             return False
         if not pkt.received_from.is_delegate:
             self.logger.debug(
-                "remote %s is not delegate", pkt.received_from.id,
+                "remote %s is not delegate", pkt.received_from.name,
             )
             return False
         if not self.is_leader(pkt.origin.id):
             self.logger.debug(
-                "remote %s is not leader", pkt.origin.id,
+                "remote %s is not leader", pkt.origin.name,
             )
             return False
         data_type = self.data_type(pkt)
@@ -477,12 +480,12 @@ class AbstractPooScene(ABC):
             return False
         if not pkt.received_from.is_delegate:
             self.logger.debug(
-                "remote %s is not delegate", pkt.received_from.id,
+                "remote %s is not delegate", pkt.received_from.name,
             )
             return False
         if not pkt.origin.is_delegate:
             self.logger.debug(
-                "origin %s is not delegate", pkt.origin.id,
+                "origin %s is not delegate", pkt.origin.name,
             )
             return False
         data_type = self.data_type(pkt)

@@ -18,6 +18,7 @@ class Node(AutoRegisterNode):
     def __init__(
         self,
         id,
+        name,
         ip,
         port,
         public_key,
@@ -34,6 +35,7 @@ class Node(AutoRegisterNode):
         super().__init__(
             id,
             manager=manager,
+            name = name,
             is_delegate=is_delegate,
             is_normal=is_normal,
             is_blacked=is_blacked,
@@ -63,6 +65,7 @@ class Node(AutoRegisterNode):
     def to_dict(self) -> typing.Dict[str, typing.Any]:
         return {
             'id': self.id,
+            'name': self.name,
             'ip': self.ip,
             'port': self.port,
             'public_key': self.public_key,

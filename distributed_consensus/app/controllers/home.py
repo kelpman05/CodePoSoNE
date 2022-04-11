@@ -9,7 +9,7 @@ def index():
     nodes = config.node_manager.nodes()
     black_nodes = config.node_manager.block_nodes()
     black_list = [
-      f'Community {node.id}'
+      f'Community {node.name}'
       for node in black_nodes
     ]
     black = "empty" if len(black_list)==0 else ",".join(black_list)

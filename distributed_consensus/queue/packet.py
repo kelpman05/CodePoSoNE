@@ -19,7 +19,7 @@ class QueuedPacket(typing.NamedTuple):
         )
 
     def __repr__(self):
-        forward = f'{self.received_from.id if self.is_forwarding else "-"}'
-        path = f'{self.origin.id}={forward}=>{self.send_to.id}'
+        forward = f'{self.received_from.name if self.is_forwarding else "-"}'
+        path = f'{self.origin.name}={forward}=>{self.send_to.name}'
 
         return f'<QueuedPacket {path} data="{b2a_hex(self.data)!s}">'

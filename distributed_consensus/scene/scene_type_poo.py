@@ -13,7 +13,7 @@ from ..app import socket_manager
 
 from ..global_config import GlobalConfig
 from ..core.node import Node
-from ..core.node_manager import NodeManager
+from ..core.node_manager import BaseNode,NodeManager
 from ..sync_adapter import QueuedPacket, QueueManagerAdapter, normal_only
 from .scene import AbstractPooScene, DataType, NodeDataMap
 from .consensus.nodeUpdate import NodeUpdate
@@ -66,7 +66,7 @@ class SceneTypeFour(AbstractPooScene):
     def solve_value(self):
         raise NotImplementedError()
     @abstractmethod
-    def solve_getter(self, int)-> bytes:
+    def solve_getter(self,node: BaseNode)-> bytes:
         raise NotImplementedError()
     @abstractmethod
     def solve_forward_getter(self,from_node,to_node,data:bytes)->bytes:
@@ -139,7 +139,7 @@ class SceneTypeFour(AbstractPooScene):
                 )
                 leader = self.get_leader()
                 if leader:
-                    self.logger.info(f'leader node id {leader.id}')
+                    self.logger.info(f'leader node name {leader.name}')
                 # step 1
                 if self.round_id > 1 and self.local.is_delegate and self.is_leader(self.local.id):
                     # 初始化文件
@@ -281,15 +281,18 @@ class MultiEnergyPoo(SceneTypeFour):
         round_id: int
         dual: bytes
         optimization:bytes
+        # 发送路径，存储每次发送的节点
+        send_path: str
         is_end: bool
         # packet: data type 1B, value 4B, end flag 1B 总共6B
-        pkt_fmt: str = '>BLBQ'
+        pkt_fmt: str = '>BLBQQ'
         # 类似于private功能，设置了__slots__后，只有__slots__里的属性能够被访问到
-        __slots__ = ['data_type', 'round_id','dual','optimization', 'is_end']
+        __slots__ = ['data_type', 'round_id','dual','optimization', 'send_path','is_end']
 
         def __init__(
-            self, data_type: DataType, round_id: int , dual: bytes,optimization:bytes,is_end: bool
+            self, data_type: DataType, round_id: int ,send_path:str, dual: bytes,optimization:bytes,is_end: bool
         ):
+            self.send_path = send_path
             self.data_type = data_type
             self.round_id = round_id
             self.dual = dual
@@ -308,24 +311,30 @@ class MultiEnergyPoo(SceneTypeFour):
             type_ = values[0]
             round_id = values[1]
             is_end = values[2]
-            dual_length = values[3]
+            send_path_length = values[3]
+            dual_length = values[4]
             value = bs[head_length:]
             #split_index = value.index(b'\x31')
+            send_path_value = value[:send_path_length]
+            send_path = str(send_path_value,encoding = "utf8")
+            value = value[send_path_length:]
             dual= value[:dual_length]
             opt=value[dual_length:]
-            return cls(DataType(type_), round_id,dual, opt, is_end > 0)
+            return cls(DataType(type_), round_id,send_path,dual, opt, is_end > 0)
 
-        def pack(self) -> bytes:    
+        def pack(self) -> bytes: 
+            send_path_value = bytes(self.send_path, encoding = "utf8")   
             base_info = struct.pack(
                 self.pkt_fmt,
                 self.data_type.value,
                 self.round_id,
                 1 if self.is_end else 0,
+                len(send_path_value),
                 len(self.dual)
             )
             #split_index = self.dual.index(b'\x1F\x1F')
             #split_index1 = self.optimization.index(b'\x1F\x1F')
-            return base_info + self.dual + self.optimization
+            return base_info + send_path_value + self.dual + self.optimization
         
         @staticmethod
         def encode_value(values:typing.List[float]):
@@ -337,7 +346,7 @@ class MultiEnergyPoo(SceneTypeFour):
             len2 = len(self.value)/len1
             value_fmt ='>' +  'd' * int(len2)
             return struct.unpack(value_fmt,self.value)
-
+        # 弃用
         def get_value(self):
             if self.data_type == DataType.GamsFileData:
                 return self.value
@@ -368,6 +377,7 @@ class MultiEnergyPoo(SceneTypeFour):
             return self._Data.from_bytes(data).is_end
         except:
             return False
+    # 弃用
     def solve_value(self):
         # self.dual_filename ,self.opt_filename ,self.dual_feasible_filename,self.opt_feasible_filename,self.dual_error_filename,self.opt_error_filename  = self.get_init_filename()
         self.solve_initiate()
@@ -382,42 +392,44 @@ class MultiEnergyPoo(SceneTypeFour):
         pack = self._Data(
           DataType.LeaderToDelegate,
           self.round_id,
+          self.local.name,
           dual_data,
           opt_data,
           False).pack()
         data = self._Data.from_bytes(pack)
         return data
-    
+    # 解初始化，会先生成可行解、最优解和错误解
     def solve_initiate(self):
         self.dual_filename ,self.opt_filename ,self.dual_feasible_filename,self.opt_feasible_filename,self.dual_error_filename,self.opt_error_filename = self.get_init_filename()
         poo_solv.solve_optimization(self.dual_filename,self.opt_filename)# 可行解（最优）
-        poo_solv.solve_feasible_optimization(self.dual_feasible_filename,self.opt_feasible_filename)# 可行解（不是最优）
+        # poo_solv.solve_feasible_optimization(self.dual_feasible_filename,self.opt_feasible_filename)# 可行解（不是最优）
         poo_solv.solve_error_optimization(self.dual_error_filename,self.opt_error_filename)# 错误解
         # ies_filename = os.path.join(self.ptry,'IES_data.xls')
     def solve_copy(self):
         delegates = { delegate for delegate in self.node_manager.get_delegates() if delegate.id != self.local.id } 
         for node in delegates:
-            dual_filename,opt_filename,dual_feasible_filename,opt_feasible_filename,dual_error_filename,opt_error_filename = self.get_node_init_filename(node.id)
+            dual_filename,opt_filename,dual_feasible_filename,opt_feasible_filename,dual_error_filename,opt_error_filename = self.get_node_init_filename(node.name)
             shutil.copy(self.dual_filename,dual_filename)
             shutil.copy(self.opt_filename,opt_filename)
-            shutil.copy(self.dual_feasible_filename,dual_feasible_filename)
-            shutil.copy(self.opt_feasible_filename,opt_feasible_filename)
+            #shutil.copy(self.dual_feasible_filename,dual_feasible_filename)
+            #shutil.copy(self.opt_feasible_filename,opt_feasible_filename)
             shutil.copy(self.dual_error_filename,dual_error_filename)
             shutil.copy(self.opt_error_filename,opt_error_filename)
-            
-    def solve_getter(self, node_id)-> bytes:
+
+    # 解获取，根据不同的配置打包不同的解
+    def solve_getter(self, node:BaseNode)-> bytes:
         dual_file = self.dual_filename
         opt_file = self.opt_filename
         if self.local.leader_evil:
-            if self.local.leader_evil.follower_ignore and node_id in self.local.leader_evil.follower_ignore:
+            if self.local.leader_evil.follower_ignore and node.id in self.local.leader_evil.follower_ignore:
                 return None
-            if self.local.leader_evil.follower_feasible and node_id in self.local.leader_evil.follower_feasible:
+            if self.local.leader_evil.follower_feasible and node.id in self.local.leader_evil.follower_feasible:
                 dual_file = self.dual_feasible_filename
                 opt_file = self.opt_feasible_filename
-            if self.local.leader_evil.follower_error and node_id in self.local.leader_evil.follower_error:
+            if self.local.leader_evil.follower_error and node.id in self.local.leader_evil.follower_error:
                 dual_file = self.dual_error_filename
                 opt_file = self.opt_error_filename
-        self.logger.info(f'send to node {node_id},{dual_file},{opt_file}')
+        self.logger.info(f'send to node {node.name},{dual_file},{opt_file}')
         dual = open(dual_file,'rb')
         opt = open(opt_file,'rb')
         dual_data = dual.read()
@@ -427,11 +439,12 @@ class MultiEnergyPoo(SceneTypeFour):
         return self._Data(
           DataType.LeaderToDelegate,
           self.round_id,
+          self.local.name,
           dual_data,
           opt_data,
           False).pack()
-
-    def get_error_solve(self)->bytes:
+    # 异常解，是在转发的时候生成异常解
+    def get_error_solve(self,send_path)->bytes:
         self.dual_filename ,self.opt_filename ,self.dual_feasible_filename,self.opt_feasible_filename,self.dual_error_filename,self.opt_error_filename = self.get_init_filename()
         dual_file = self.dual_error_filename
         opt_file = self.opt_error_filename
@@ -441,26 +454,30 @@ class MultiEnergyPoo(SceneTypeFour):
         opt_data = opt.read()
         dual.close()
         opt.close()
+        send_path = send_path +'via' +self.local.name
         return self._Data(
           DataType.LeaderToDelegate,
           self.round_id,
+          send_path,
           dual_data,
           opt_data,
           False).pack()
-
-    def solve_forward_getter(self,from_node,to_node,data:bytes)->[bytes,bool]:
+    # 转发，默认情况会原封不动的转发，作恶情况生成异常解
+    def solve_forward_getter(self,from_node,to_node,data:bytes)->bytes:
+        value = self._Data.from_bytes(data)
         # leader 发送给自己的节点进行转发时，使用solve_getter，会出现异常，当leader配置忽略发送时，new_data是null
         #if from_node == self.local.id:
         #    new_data = self.solve_getter(to_node)
             # self.logger.warning(f'from_node {from_node} to_node {to_node} equest {new_data == data}')
         #    return [new_data,new_data == data]
         if self.local.leader_evil and self.local.leader_evil.follower_trick_ignore and to_node in self.local.leader_evil.follower_trick_ignore:
-            return [None,True]
+            return None
         if self.local.leader_evil and self.local.leader_evil.follower_trick_error and to_node in self.local.leader_evil.follower_trick_error:
-            new_data = self.get_error_solve()
-            return [new_data,new_data == data] 
-        
-        return [data,True]
+            new_data = self.get_error_solve(value.send_path)
+            return new_data
+        value.send_path = value.send_path+'via'+self.local.name
+        new_data = value.pack()
+        return new_data
     
     # 判断最优解
     def solve_validate(self)->bool:
@@ -485,7 +502,7 @@ class MultiEnergyPoo(SceneTypeFour):
         # 计算md5值来处理文件名
         dual_md5 = hashlib.md5(_data.dual).hexdigest()
         opt_md5 = hashlib.md5(_data.optimization).hexdigest()
-        dual_file,opt_file = self.get_filename(_data.data_type,origin_id,received_from_id,dual_md5,opt_md5)
+        dual_file,opt_file = self.get_filename(_data.data_type,_data.send_path,dual_md5,opt_md5)
         dual_writer = open(dual_file,'wb')
         dual_writer.write(_data.dual)
         dual_writer.close()
@@ -493,7 +510,7 @@ class MultiEnergyPoo(SceneTypeFour):
         opt_writer.write(_data.optimization)
         opt_writer.close()
         result,obj = poo_solv.validate_optimization(dual_file,opt_file,ies_file)
-        self.logger.info(f'solve validate {origin_id}via{received_from_id} result：{result}，obj：{obj}')
+        self.logger.info(f'solve validate {_data.send_path}via{self.local.name} result：{result}，obj：{obj}')
 
         if self.local.leader_evil and self.local.leader_evil.follower_trick_error:
             self.logger.info(f'local node is tricker,solve from anywhere always be true')
@@ -552,8 +569,10 @@ class MultiEnergyPoo(SceneTypeFour):
         # 解保存，这个是在normal节点中，获取到就马上保存，这个不需要用来进行其他用途
         ies_file = self.get_ies_filename()
         result,obj = poo_solv.validate_optimization(dual_file,opt_file,ies_file)
-        self.logger.info(f'solve validate {pkt.origin.id}via{pkt.received_from.id}  result：{result}，obj：{obj}')
+        self.logger.info(f'solve validate {data.send_path}via{pkt.received_from.name}  result：{result}，obj：{obj}')
     
+    # 验证结果数据打包
+    # node_id数据发送的目标ID
     def optimal_getter(self, node_id)-> bytes:
         if self.local.leader_evil and self.local.leader_evil.follower_trick_error and node_id in self.local.leader_evil.follower_trick_error:
             self.dual_rev_filename = self.dual_error_filename
@@ -565,6 +584,7 @@ class MultiEnergyPoo(SceneTypeFour):
         return self._Data(
           DataType.DelegateToNormal,
           self.round_id,
+          self.local.name,
           dual_data,
           opt_data,
           False).pack()
@@ -577,13 +597,13 @@ class MultiEnergyPoo(SceneTypeFour):
     def is_packet_valid(self, pkt: QueuedPacket) -> bool:
         try:
             if self.node_manager.is_block(pkt.origin.id):
-                self.logger.debug(f'pkt from blacklist node {pkt.origin.id}')
+                self.logger.debug(f'pkt from blacklist node {pkt.origin.name}')
             data = self._Data.from_bytes(pkt.data)
             self.logger.debug(
-                'got scene data %r by %d via %s',
+                'got scene data %r by %s via %s',
                 data,
-                pkt.origin.id,
-                pkt.received_from.id if pkt.received_from else 'unknown',
+                data.send_path,
+                self.local.name,
             )
             self.logger.debug(f'current round_id {self.round_id},node round_id {data.round_id}')
             return True if data.data_type == DataType.DelegateToNormal else data.round_id == self.round_id 
@@ -594,31 +614,32 @@ class MultiEnergyPoo(SceneTypeFour):
     def data_type(self, pkt: QueuedPacket) -> DataType:
         return self._Data.from_bytes(pkt.data).data_type
     
+    # 继承自父类，父类用于QueuedPacket解析
     def data_value(self,pkt:QueuedPacket):
-        return self._Data.from_bytes(pkt.data).get_value()
+        return self._Data.from_bytes(pkt.data)
     
     def scene_complete(self):
         self.logger.info('scene complete')
 
     def get_init_filename(self):
-        return self.get_node_init_filename(self.local.id)
-    def get_node_init_filename(self,node_id):
-        dual_file =os.path.join(self.ptry,'init' ,f'dual_data_Node{node_id}.gdx') 
-        opt_file = os.path.join(self.ptry, 'init',f'Optimization_data_Node{node_id}.gdx')
-        dual_feasible_file = os.path.join(self.ptry,'init',f'dual_feasible_data_Node{node_id}.gdx') 
-        opt_feasible_file = os.path.join(self.ptry,'init',f'Optimization_feasible_data_Node{node_id}.gdx')
-        dual_error_file = os.path.join(self.ptry,'init',f'dual_error_data_Node{node_id}.gdx') 
-        opt_error_file = os.path.join(self.ptry,'init',f'Optimization_error_data_Node{node_id}.gdx')
+        return self.get_node_init_filename(self.local.name)
+    def get_node_init_filename(self,node_name):
+        dual_file =os.path.join(self.ptry,'init' ,f'dual_data_Node{node_name}.gdx') 
+        opt_file = os.path.join(self.ptry, 'init',f'Optimization_data_Node{node_name}.gdx')
+        dual_feasible_file = os.path.join(self.ptry,'init',f'dual_feasible_data_Node{node_name}.gdx') 
+        opt_feasible_file = os.path.join(self.ptry,'init',f'Optimization_feasible_data_Node{node_name}.gdx')
+        dual_error_file = os.path.join(self.ptry,'init',f'dual_error_data_Node{node_name}.gdx') 
+        opt_error_file = os.path.join(self.ptry,'init',f'Optimization_error_data_Node{node_name}.gdx')
         return (dual_file,opt_file,dual_feasible_file,opt_feasible_file,dual_error_file,opt_error_file)
     def get_pkt_filename(self,pkt:QueuedPacket):
         data = self._Data.from_bytes(pkt.data)
         dual_md5 = hashlib.md5(data.dual).hexdigest()
         opt_md5 = hashlib.md5(data.optimization).hexdigest()
-        return self.get_filename(data.data_type,pkt.origin.id,pkt.received_from.id,dual_md5,opt_md5)
-    def get_filename(self,data_type:DataType,origin_id:int,received_from_id:int,dual_md5:str,opt_md5:str):
+        return self.get_filename(data.data_type,data.send_path,dual_md5,opt_md5)
+    def get_filename(self,data_type:DataType,send_path:str,dual_md5:str,opt_md5:str):
         prefix = 'delegate' if data_type == DataType.LeaderToDelegate else 'normal'
-        dual_file =os.path.join(self.ptry,prefix ,f'dual_data_Node{self.local.id}_{origin_id}via{received_from_id}_{dual_md5}.gdx') 
-        opt_file = os.path.join(self.ptry, prefix,f'Optimization_data_Node{self.local.id}_{origin_id}via{received_from_id}_{opt_md5}.gdx')
+        dual_file =os.path.join(self.ptry,prefix ,f'dual_data_Node{self.local.name}_{send_path}via{self.local.name}_{dual_md5}.gdx') 
+        opt_file = os.path.join(self.ptry, prefix,f'Optimization_data_Node{self.local.name}_{send_path}via{self.local.name}_{opt_md5}.gdx')
         return (dual_file,opt_file)
     def get_ies_filename(self):
         return os.path.join(self.ptry,'IES_data.xls')

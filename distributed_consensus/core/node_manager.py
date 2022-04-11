@@ -4,15 +4,17 @@ from weakref import WeakSet, WeakValueDictionary
 
 class BaseNode:
     id: int
+    name: str
     is_delegate: bool
     is_blacked: bool
     is_normal: bool
 
     def __init__(
-        self, id, is_delegate=False, is_normal=True, is_blacked=False,
+        self, id,name, is_delegate=False, is_normal=True, is_blacked=False,
     ):
         super().__init__()
         self.id = id
+        self.name = name
         self.is_delegate = is_delegate
         self.is_normal = is_normal
         self.is_blacked = is_blacked

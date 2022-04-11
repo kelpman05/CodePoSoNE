@@ -38,7 +38,7 @@ class Demand:
         
         threads = []
         for node in c.node_manager.nodes():
-            t = threading.Thread(target=self.init_demand, args=[node],name=f'init_demand {node.id}')
+            t = threading.Thread(target=self.init_demand, args=[node],name=f'init_demand {node.name}')
             threads.append(t)
             t.start()
         # asyncio.get_event_loop().run_until_complete(asyncio.wait(tasks))
@@ -58,7 +58,7 @@ class Demand:
             hp = values[2]
             update_threads=[]
             for i in range(12):
-                t = threading.Thread(target=self.normal_update, args=[i,gp,ep,hp],name=f'normal_update {node.id}')
+                t = threading.Thread(target=self.normal_update, args=[i,gp,ep,hp],name=f'normal_update {node.name}')
                 update_threads.append(t)
                 t.start()
             self.wait_for_thread(update_threads)

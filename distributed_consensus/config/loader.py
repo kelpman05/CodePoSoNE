@@ -55,6 +55,7 @@ class Config:
     def create_node(
         self,
         node_id: int,
+        name: str,
         ip: str,
         port: int,
         private_key_file: str,
@@ -150,6 +151,7 @@ class Config:
             leader = LeaderEvil(follower_ignore,follower_error,follower_feasible,follower_collusion,follower_trick_error,follower_trick_ignore)
         node = Node(
             node_id,
+            name,
             ip,
             port,
             public_key,

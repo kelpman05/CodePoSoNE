@@ -10,6 +10,7 @@ log_level: debug
 nodes:
     
     8:
+        name: C
         transport: tcpv1
         ip: 127.0.0.1
         port: 11118
@@ -24,15 +25,16 @@ nodes:
             # 作恶3 配置follower_feasible
             # 作恶4 配置follower_error 和 follower_collusion
             # 不发送给从节点
-            follower_ignore: [9,10,12]
+            follower_ignore: [12]
             # 给从节点发送错误姐
-            follower_error: [8,11]
+            follower_error: [8,10,11]
             # 给从节点发送不是最优解的可行解
             #follower_feasible: []
             # 从代表串谋者，会直接发送代表发送过来的结果，而不会比较最优解
             #follower_collusion: []
 
     9:
+        name: D
         transport: tcpv1
         ip: 127.0.0.1
         port: 11119
@@ -46,6 +48,7 @@ nodes:
             #follower_trick_ignore: [10,11,12]
             
     10:
+        name: E
         transport: tcpv1
         ip: 127.0.0.1
         port: 11120
@@ -59,6 +62,7 @@ nodes:
             #follower_trick_error: [9]
             #follower_trick_ignore: [11,12]
     11:
+        name: F
         transport: tcpv1
         ip: 127.0.0.1
         port: 11121
@@ -68,8 +72,10 @@ nodes:
         is_normal: yes
         hub: "./tests/data/HUB11.xlsx"
         leader_evil:
-            follower_trick_error: [9,10,12]
+            follower_trick_error: [9]
+            follower_trick_ignore: [10,12]
     12:
+        name: G
         transport: tcpv1
         ip: 127.0.0.1
         port: 11122

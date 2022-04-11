@@ -73,19 +73,19 @@ class QueueManager:
         super().__init__()
         self.local = local
         self._by_node = dict()
-        self.logger = L.getChild(f'QueueManager-{local.id}')
+        self.logger = L.getChild(f'QueueManager-{local.name}')
         self._buffered = deque()
         self.node_manager = node_manager
 
     async def send_to(self, remote: Node, pkt: bytes):
         if remote.id not in self._by_node:
             self.logger.warn(
-                f'remote {remote.id} not connected or already disconnected'
+                f'remote {remote.name} not connected or already disconnected'
             )
             return
 
         _, egress = self._by_node[remote.id]
-        self.logger.debug(f'put pkt to remote {remote.id}')
+        self.logger.debug(f'put pkt to remote {remote.name}')
 
         to_queue = QueuedPacket(
             origin=self.local,
@@ -106,7 +106,7 @@ class QueueManager:
                 self.logger.debug(f'{remote} is filtered out by {filter!r}')
                 continue
 
-            self.logger.debug(f'broadcast pkt to remote {node_id}')
+            self.logger.debug(f'broadcast pkt to remote {remote.name}')
             to_queue = QueuedPacket(
                 origin=self.local,
                 send_to=remote,
@@ -123,8 +123,8 @@ class QueueManager:
                 self.logger.debug(f'{remote} is filtered out by {filter!r}')
                 continue
 
-            self.logger.debug(f'broadcast pkt to remote {node_id}')
-            pkt = getter(node_id)
+            self.logger.debug(f'broadcast pkt to remote {remote.name}')
+            pkt = getter(remote)
             if not pkt:
                 continue
             to_queue = QueuedPacket(
@@ -152,7 +152,7 @@ class QueueManager:
                 self.logger.debug(f'{remote} is origin, no loopback')
                 continue
 
-            self.logger.debug(f'forward pkt to remote {node_id}')
+            self.logger.debug(f'forward pkt to remote {remote.name}')
             to_queue = QueuedPacket(
                 origin=to_forward.origin,
                 send_to=remote,
@@ -176,16 +176,17 @@ class QueueManager:
             if not loopback and to_forward.origin == remote:
                 self.logger.debug(f'{remote} is origin, no loopback')
                 continue
-            to_data,nochange = getter(to_forward.origin.id,node_id,to_forward.data)
+            to_data = getter(to_forward.origin.id,node_id,to_forward.data)
             if not to_data:
                 continue
-            self.logger.debug(f'forward pkt to remote {node_id}')
+            self.logger.debug(f'forward pkt to remote {remote.name}')
             to_queue = QueuedPacket(
                 origin=to_forward.origin,
                 send_to=remote,
                 received_from=self.local,
                 data=to_data,
-                full_packet=to_forward.full_packet if nochange else None,#to_forward.full_packet会包含所有的原始数据，当这个字段有数时，会直接发送这个字段的数据，不会重新打包，这导致修改后的数据没有发送过去
+                # full_packet=to_forward.full_packet if nochange else None,#to_forward.full_packet会包含所有的原始数据，当这个字段有数时，会直接发送这个字段的数据，不会重新打包，这导致修改后的数据没有发送过去
+                full_packet=None
             )   
             await egress.put(to_queue)
 
@@ -194,9 +195,9 @@ class QueueManager:
             return self._buffered.popleft()
         return None
     def send2itselft_adapt(self,getter:DataGetter):
-        pkt = getter(self.local.id)
+        pkt = getter(self.local)
         if not pkt:
-            self.logger.warning(f'send2itselft_adapt waining {self.local.id} getter get none')
+            self.logger.warning(f'send2itselft_adapt waining {self.local.name} getter get none')
             return
         to_queue = QueuedPacket(
             origin=self.local,
@@ -262,7 +263,7 @@ class QueueManager:
 
     def _check_dup_channel(self, remote: Node):
         if remote.id in self._by_node:
-            raise RuntimeError(f'dup channel for remote node {remote.id}')
+            raise RuntimeError(f'dup channel for remote node {remote.name}')
 
     def create_queue(
         self, remote: Node
