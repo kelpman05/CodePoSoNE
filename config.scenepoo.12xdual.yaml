@@ -10,7 +10,7 @@ log_level: debug
 nodes:
     
     8:
-        name: C
+        name: D
         transport: tcpv1
         ip: 127.0.0.1
         port: 11118
@@ -19,22 +19,22 @@ nodes:
         is_delegate: yes
         is_normal: yes
         hub: "./tests/data/HUB8.xlsx"
-        leader_evil:
+        #leader_evil:
             # 作恶1 配置follower_error
             # 作恶2 配置follower_ignore
             # 作恶3 配置follower_feasible
             # 作恶4 配置follower_error 和 follower_collusion
             # 不发送给从节点
-            follower_ignore: [12]
-            # 给从节点发送错误姐
-            follower_error: [8,10,11]
+            #follower_ignore: [12]
+            # 给从节点发送错误解
+            #follower_error: [8,9,10,11]
             # 给从节点发送不是最优解的可行解
             #follower_feasible: []
             # 从代表串谋者，会直接发送代表发送过来的结果，而不会比较最优解
             #follower_collusion: []
 
     9:
-        name: D
+        name: C
         transport: tcpv1
         ip: 127.0.0.1
         port: 11119
@@ -43,9 +43,9 @@ nodes:
         is_delegate: yes
         is_normal: yes
         hub: "./tests/data/HUB9.xlsx"
-        #leader_evil:
+        leader_evil:
             # 从代表串谋者，会直接发送代表发送过来的结果，而不会比较最优解
-            #follower_trick_ignore: [10,11,12]
+            follower_trick_ignore: [10,11,12]
             
     10:
         name: E
@@ -60,7 +60,7 @@ nodes:
         #leader_evil:
             # 从代表串谋者，会直接发送代表发送过来的结果，而不会比较最优解
             #follower_trick_error: [9]
-            #follower_trick_ignore: [11,12]
+            #follower_trick_ignore: [9,11,12]
     11:
         name: F
         transport: tcpv1
@@ -72,8 +72,8 @@ nodes:
         is_normal: yes
         hub: "./tests/data/HUB11.xlsx"
         leader_evil:
-            follower_trick_error: [9]
-            follower_trick_ignore: [10,12]
+            #follower_trick_error: [9]
+            follower_trick_ignore: [9,10,12]
     12:
         name: G
         transport: tcpv1
@@ -92,8 +92,10 @@ scene:
     # 创建场景类实例时需要传入的参数。程序使用keyword方式传参，因此参数顺序并不重要。
     params:
         final_round: 2000
-        round_timeout_sec: 50.0
-        normal_round_timeout_sec: 3000.0
+        #代表节点接收数据超时时间
+        round_timeout_sec: 5.3 # 5.3 scen1,3,4  7.7 scen2
+        #普通节点接收数据超时时间，是在返回解的时候
+        normal_round_timeout_sec: 20 #3000.0
         round_end_cache: "./tests/cache/round_end.txt"
         init_end_cache: "./tests/cache/init_end.txt"
         ptry: "./tests/ptry"  

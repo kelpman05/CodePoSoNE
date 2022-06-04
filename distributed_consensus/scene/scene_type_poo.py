@@ -6,6 +6,7 @@ import time
 import os,inspect
 import shutil
 import hashlib
+import time;
 from abc import abstractmethod
 from datetime import datetime, timedelta
 from time import sleep
@@ -152,6 +153,7 @@ class SceneTypeFour(AbstractPooScene):
                 self.logger.info("wait for init")
                 self.wait_for_init()
                 self.logger.info("start receive")
+                start = time.perf_counter()
                 # 第一轮      
                 self.received_leader_data.clear()
                 self.seen.clear()
@@ -159,6 +161,8 @@ class SceneTypeFour(AbstractPooScene):
                 round_end = now + timedelta(seconds=self.round_timeout())
                 
                 self.round(round_end)
+                end = time.perf_counter()
+                self.logger.info('Duration of message exchange {:.4f}s'.format(end-start))
                 self.writer_init_end(False)
                 # 这里稍微等待久一点，能让所有的节点都完成了上一轮的操作，这样能避免出现roud_id不一致问题
                 self.check_round_end()
@@ -177,7 +181,7 @@ class SceneTypeFour(AbstractPooScene):
         self.normal_round(round_end)
         
         self.scene_complete()
-        self.done_cb()
+        #self.done_cb()
     
     def round(self, round_end: datetime):
         round_over = False
@@ -201,7 +205,7 @@ class SceneTypeFour(AbstractPooScene):
             # step 4 pkt包含了remote等信息，看看是否是根据这个来回传给普通节点
             self.delegate_node_action(pkt)
         if(round_over):
-            self.write_round_end_time(10)
+            self.write_round_end_time(50)
             # 写入round_end时间
     # 代表节点处理，普通节点的对来自代表的数据进行处理
     def normal_round(self,round_end:datetime):
@@ -211,7 +215,7 @@ class SceneTypeFour(AbstractPooScene):
             if pkt is None:
                 # 超时结束
                 self.logger.info(
-                    f'receive timeout, round {self.round_id} over'
+                    f'receive timeout, round over'
                 )
                 round_over = True
                 break
@@ -487,6 +491,7 @@ class MultiEnergyPoo(SceneTypeFour):
             leader = self.get_leader() 
             if leader:
                 self.node_manager.block(leader.id)
+                self.logger.info(f'validate false,max_obj={self.max_obj},block node {leader.name}')
         # 重置最优解和解锁定状态
         self.max_obj =0
         self.fixed = False
@@ -551,7 +556,7 @@ class MultiEnergyPoo(SceneTypeFour):
         # 当解锁定时，不修改max_obj值和最优解
         # result == 1时为正确解，返回true
         if not self.fixed and result ==1 and obj>self.max_obj:
-            max_obj = obj
+            self.max_obj = obj
             self.dual_rev_filename = dual_file
             self.opt_rev_filename = opt_file
         

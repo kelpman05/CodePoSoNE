@@ -84,7 +84,7 @@ class TCPProtocolV1:
         header = self.peek_header()
         if header is None:
             # insufficient data
-            return None
+            return [None,None,True]
 
         original_id, pkt_len = header
         full_len = self.header_recv_len + pkt_len + self.signature_len
