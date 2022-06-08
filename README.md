@@ -1,6 +1,7 @@
 # PoSo code
 - This repository includes the PoSo code and shows how PoSo can be used to enable energy dispatch for an integrated energy system (IES) at the University of Manchester. The parameters and dispatch results of the IES are available at https://github.com/kelpman05/DataUofManchester. Explanation of the PoSo algorithm is available at the following article. Please cite this article (refered to as PoSo article in the following text) if you want to cite the PoSo code.
 - Chen, S., Mi, H., Ping, J., Yan, Z., Shen, Z., Liu, X., Zhang, N., Xia, Q., Kang, C., (2022), A blockchain consensus mechanism that uses Proof of Solution to optimize energy dispatch and trading, Nature Energy, https://doi.org/10.1038/s41560-022-01027-4.
+- If you do not have institutional access to the PoSo article, please access the full article via https://rdcu.be/cPa8Z. Please feel free to publicly share this link.  
 - Please contact Sijie Chen (sijie.chen AT sjtu.edu.cn) if you have any questions. 
 
 # Environment Configuration
