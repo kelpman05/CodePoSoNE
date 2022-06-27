@@ -1078,10 +1078,10 @@ Sets
        SEBus             'Set of EBus row' /1*15/
        SEBran            'Set of EBranch row' /1*14/
        SCHP              'Set of CHP'   /1*8/
-       SCHPj             'Set of CHP column'/P,Q,H,G/
+       SCHPj             'Set of CHP column'/P,Q,H/
        GasBoj            'Set of Gasboiler column' /H,G/
-       SEStoj             'Set of electric storage' /P,Pi,Po/
-       SHStoj             'Set of electric storage' /H,Hi,Ho/
+       Estoj             'Set of electric storage' /P,Pi,Po/
+       Hstoj             'Set of electric storage' /H,Hi,Ho/
        SHBus             'Set of HBus row'/1*36/
        SHBranch          'Set of HBranch row'/1*35/
        SGBus             'Set of GBus row'   /1*37/
@@ -1130,25 +1130,26 @@ Table CHPcost(SCHP,*)      'CHP: aP^2+bP+cH^2+dH+ePH, $,MW  GasBoiler: fH  comes
 
 Table EStoragedata(SCHP,*)
             ramp       Pmax    Conver      loss      
-   1          60        300       0.9      0.95     
-   2          60        300       0.9      0.95     
-   3          60        300       0.9      0.95     
-   4          60        300       0.9      0.95     
-   5          60        300       0.9      0.95     
-   6          60        300       0.9      0.95     
-   7          60        300       0.9      0.95     
-   8          60        300       0.9      0.95
+   1          60        300       0.9     0.999     
+   2          60        300       0.9     0.999   
+   3          60        300       0.9     0.999 
+   4          60        300       0.9     0.999  
+   5          60        300       0.9     0.999  
+   6          60        300       0.9     0.999  
+   7          60        300       0.9     0.999  
+   8          60        300       0.9     0.999
    ;
+*300 50
 Table HStoragedata(SCHP,*)
             ramp       Pmax    Conver      loss      
-   1          50        300       0.9      0.95     
-   2          50        300       0.9      0.95     
-   3          50        300       0.9      0.95     
-   4          50        300       0.9      0.95     
-   5          50        300       0.9      0.95     
-   6          50        300       0.9      0.95     
-   7          50        300       0.9      0.95     
-   8          50        300       0.9      0.95
+   1          50        300       0.9     0.999  
+   2          50        300       0.9     0.999  
+   3          50        300       0.9     0.999  
+   4          50        300       0.9     0.999  
+   5          50        300       0.9     0.999    
+   6          50        300       0.9     0.999  
+   7          50        300       0.9     0.999  
+   8          50        300       0.9     0.999
    ;
    
 Table EBus(SEBus, *)   'EBus data(PQ in kW)'
@@ -1368,7 +1369,7 @@ Pij(St,SEBran)              'Active power on branchij, kW'
 Qij(St,SEBran)              'Reactive power on branchij, kVar'
 Vi(St,SEBus)                'Voltage of bus i in squared form,kV^2'
 Iij(St,SEBran)              'Current of branch ij in squared form, A^2'
-Esto(St,SCHP,SEStoj)         'Electric storage, kW'
+Esto(St,SCHP,Estoj)         'Electric storage, kW'
 
 *heat variables
 GasBo(St,SCHP,GasBoj)       'Gasboiler output, kW'
@@ -1381,7 +1382,7 @@ TempBranEndS(St,SHBranch)   'Node temperature at supply side'
 TempBusR(St,SHBus)          'Node temperature at return side'
 TempBranEndR(St,SHBranch)   'Node temperature at return side'
 TempLoadout(St,SHBus)       'Load output temperature'
-Hsto(St,SCHP,SHStoj)         'Electric storage, kW'
+Hsto(St,SCHP,Hstoj)         'Electric storage, kW'
 
 *gas variables
 GasFlow(St,SGBranch)        'Branch gasflow'
@@ -1391,6 +1392,7 @@ GasPressure(St,SGBus)       'Node gas pressure'
 
 Vi.lo(St,SEBus)=sqr(0.9*6.6);
 Vi.up(St,SEBus)=sqr(1.1*6.6);
+Iij.up(St,SEBran)=9000;
 Esto.up(St,SCHP,'P')=EStoragedata(SCHP,'Pmax');
 Esto.lo(St,SCHP,'P')=EStoragedata(SCHP,'Pmax')/10;
 Esto.up(St,SCHP,'Pi')=EStoragedata(SCHP,'ramp');
