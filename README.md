@@ -9,9 +9,6 @@
 - The code uses GAMS to solve the optimization problem. Please install GAMS and solver "CONOPT4".
 - The code for delegates to communicate messages is written in Python. Please install GAMS Python API. 
 - Before running the code, please replace `C:\Users\miller\Desktop\PoO\POO_scenario` with your own local path in POO_scenario\config.scenepoo.12xdual .bat.
-- The code about the optimization model and the associated optimality conditions are given in `POO_scenario\distributed_consensus\scene\poo_solve.py`. 
-- The delegates' dishonest behaviors can be configured in `POO_scenario\config.scenepoo.12xdual.yaml`. 
-- The start-up file is `POO_scenario\config.scenepoo.12xdual .bat`.
 
 # Experiment 
 The PoSo article demonstrates four scenarios when running the PoSo code (see Table 3 in the PoSo article). In `POO_scenario\config.scenepoo.12xdual.yaml`, nodes 8-12 act as leaders in turns. The variable "name" can be set as C, D, E, F, and G to represent different delegates. The variable "leader_evil" defines whether a delegate is dishonest. A dishonest leader sends non-optimal messages to those followers defined as "follower_error", and does not send any message to those followers defined as "follower_ignore". A dishonest follower sends non-optimal messages to those delegates defined as "follower_trick_error", and does not send any message to those delegates defined as "follower_trick_ignore".
